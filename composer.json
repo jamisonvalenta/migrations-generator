@@ -1,5 +1,5 @@
 {
-	"name": "xethron/migrations-generator",
+	"name": "jamisonvalenta/migrations-generator",
 	"description": "Generates Laravel Migrations from an existing database",
 	"keywords": ["laravel", "migration", "generator", "migrations", "artisan"],
 	"license": "MIT",
