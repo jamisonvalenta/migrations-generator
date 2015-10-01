@@ -4,7 +4,7 @@
  * Class Table
  * @package Xethron\MigrationsGenerator\Syntax
  */
-abstract class Table extends \Way\Generators\Syntax\Table{
+abstract class Table extends \Laracasts\Generators\Syntax\Table{
 
 	/**
 	 * @var string

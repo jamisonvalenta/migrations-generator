@@ -35,7 +35,7 @@ class MigrationsGeneratorServiceProviderTest extends PHPUnit_Framework_TestCase 
           $mock
             ->shouldReceive('make')
             ->atLeast()->once()
-            ->with('Way\Generators\Generator')
+            ->with('Laracasts\Generators\Generator')
             ->andReturn(
               $this->get_generator_mock()
             );
@@ -43,7 +43,7 @@ class MigrationsGeneratorServiceProviderTest extends PHPUnit_Framework_TestCase 
           $mock
             ->shouldReceive('make')
             ->atLeast()->once()
-            ->with('Way\Generators\Filesystem\Filesystem')
+            ->with('Laracasts\Generators\Filesystem\Filesystem')
             ->andReturn(
               $this->get_filesystem_mock()
             );
@@ -51,7 +51,7 @@ class MigrationsGeneratorServiceProviderTest extends PHPUnit_Framework_TestCase 
           $mock
             ->shouldReceive('make')
             ->atLeast()->once()
-            ->with('Way\Generators\Compilers\TemplateCompiler')
+            ->with('Laracasts\Generators\Compilers\TemplateCompiler')
             ->andReturn(
               $this->get_template_compiler_mock()
             );
@@ -144,21 +144,21 @@ class MigrationsGeneratorServiceProviderTest extends PHPUnit_Framework_TestCase 
 
   protected function get_generator_mock()
   {
-    return Mockery::mock('Way\Generators\Generator')
+    return Mockery::mock('Laracasts\Generators\Generator')
       ->shouldAllowMockingProtectedMethods()
       ->makePartial();
   }
 
   protected function get_filesystem_mock()
   {
-    return Mockery::mock('Way\Generators\Filesystem\Filesystem')
+    return Mockery::mock('Laracasts\Generators\Filesystem\Filesystem')
       ->shouldAllowMockingProtectedMethods()
       ->makePartial();
   }
 
   protected function get_template_compiler_mock()
   {
-    return Mockery::mock('Way\Generators\Compilers\TemplateCompiler')
+    return Mockery::mock('Laracasts\Generators\Compilers\TemplateCompiler')
       ->shouldAllowMockingProtectedMethods()
       ->makePartial();
   }

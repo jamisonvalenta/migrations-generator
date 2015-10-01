@@ -1,24 +1,19 @@
 <?php namespace Xethron\MigrationsGenerator;
 
-use Way\Generators\Commands\GeneratorCommand;
+use Illuminate\Config\Repository as Config;
+use Illuminate\Console\Command;
+use Illuminate\Database\Migrations\MigrationRepositoryInterface;
+use Illuminate\Filesystem\Filesystem;
+use Laracasts\Generators\Commands\MigrationMakeCommand;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
-
-use Way\Generators\Generator;
-use Way\Generators\Filesystem\Filesystem;
-use Way\Generators\Compilers\TemplateCompiler;
-use Illuminate\Database\Migrations\MigrationRepositoryInterface;
-
-use Way\Generators\Syntax\DroppedTable;
-
 use Xethron\MigrationsGenerator\Generators\SchemaGenerator;
 use Xethron\MigrationsGenerator\Syntax\AddToTable;
 use Xethron\MigrationsGenerator\Syntax\AddForeignKeysToTable;
 use Xethron\MigrationsGenerator\Syntax\RemoveForeignKeysFromTable;
 
-use Illuminate\Config\Repository as Config;
 
-class MigrateGenerateCommand extends GeneratorCommand {
+class MigrateGenerateCommand extends Command {
 
 	/**
 	 * The console command name.
@@ -33,14 +28,9 @@ class MigrateGenerateCommand extends GeneratorCommand {
 	protected $description = 'Generate a migration from an existing table structure.';
 
 	/**
-	 * @var \Way\Generators\Filesystem\Filesystem
+	 * @var Filesystem
 	 */
 	protected $file;
-
-	/**
-	 * @var \Way\Generators\Compilers\TemplateCompiler
-	 */
-	protected $compiler;
 
 	/**
 	 * @var \Illuminate\Database\Migrations\MigrationRepositoryInterface  $repository
@@ -101,27 +91,19 @@ class MigrateGenerateCommand extends GeneratorCommand {
 	 */
 	protected $table;
 
-	/**
-	 * @param \Way\Generators\Generator  $generator
-	 * @param \Way\Generators\Filesystem\Filesystem  $file
-	 * @param \Way\Generators\Compilers\TemplateCompiler  $compiler
-	 * @param \Illuminate\Database\Migrations\MigrationRepositoryInterface  $repository
-	 * @param \Illuminate\Config\Repository  $config
-	 */
 	public function __construct(
-		Generator $generator,
+        MigrationMakeCommand $generator,
 		Filesystem $file,
-		TemplateCompiler $compiler,
-		MigrationRepositoryInterface $repository,
+		MigrationRepositoryInterface $migrations,
 		Config $config
 	)
 	{
+        $this->generator = $generator;
 		$this->file = $file;
-		$this->compiler = $compiler;
-		$this->repository = $repository;
+		$this->migrations = $migrations;
 		$this->config = $config;
 
-		parent::__construct( $generator );
+        parent::__construct();
 	}
 
 	/**
@@ -148,18 +130,17 @@ class MigrateGenerateCommand extends GeneratorCommand {
 
 		$tables = $this->removeExcludedTables($tables);
 		$this->info( 'Generating migrations for: '. implode( ', ', $tables ) );
+        if ( !$this->option( 'no-interaction' )) {
+            $this->log = $this->askYn('Do you want to log these migrations in the migrations table?');
+        }
 
-		if (!$this->option( 'no-interaction' )) {
-			$this->log = $this->askYn('Do you want to log these migrations in the migrations table?');
-		}
-
-		if ( $this->log ) {
-			$this->repository->setSource( $this->option( 'connection' ) );
-			if ( ! $this->repository->repositoryExists() ) {
+        if ( $this->log ) {
+			$this->migrations->setSource( $this->option( 'connection' ) );
+			if ( ! $this->migrations->repositoryExists() ) {
 				$options = array('--database' => $this->option( 'connection' ) );
 				$this->call('migrate:install', $options);
 			}
-			$batch = $this->repository->getNextBatchNumber();
+			$batch = $this->migrations->getNextBatchNumber();
 			$this->batch = $this->askNumeric( 'Next Batch Number is: '. $batch .'. We recommend using Batch Number 0 so that it becomes the "first" migration', 0 );
 		}
 
@@ -237,10 +218,9 @@ class MigrateGenerateCommand extends GeneratorCommand {
 			$this->table = $table;
 			$this->fields = $this->schemaGenerator->{$function}( $table );
 			if ( $this->fields ) {
-				parent::fire();
 				if ( $this->log ) {
 					$file = $this->datePrefix . '_' . $this->migrationName;
-					$this->repository->log($file, $this->batch);
+					$this->migrations->log($file, $this->batch);
 				}
 			}
 		}
@@ -320,7 +300,7 @@ class MigrateGenerateCommand extends GeneratorCommand {
 	 */
 	protected function getOptions()
 	{
-		return [
+        return [
 			['connection', 'c', InputOption::VALUE_OPTIONAL, 'The database connection to use.', $this->config->get( 'database.default' )],
 			['tables', 't', InputOption::VALUE_OPTIONAL, 'A list of Tables you wish to Generate Migrations for separated by a comma: users,posts,comments'],
 			['ignore', 'i', InputOption::VALUE_OPTIONAL, 'A list of Tables you wish to ignore, separated by a comma: users,posts,comments' ],
